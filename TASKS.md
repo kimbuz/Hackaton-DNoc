@@ -3,53 +3,53 @@
 ## 📋 Tareas por Componente
 
 ### 1. Configuración Inicial AWS
-- [ ] Ejecutar `python setup_environment.py` para resolver dependencias
+- [x] Ejecutar `python setup_environment.py` para resolver dependencias
 - [x] Configurar credenciales AWS CLI
 - [x] Verificar acceso a Amazon Bedrock en la región
-- [ ] Crear bucket S3 para documentos de la base de conocimiento
-- [ ] Configurar roles IAM necesarios
+- [x] Crear bucket S3 para documentos de la base de conocimiento
+- [x] Configurar roles IAM necesarios
 
 ### 2. Base de Conocimiento (`knowledge-base/`)
 - [x] Crear bucket S3 y subir documentos (completado con script)
-- [ ] **MANUAL**: Crear Knowledge Base en consola AWS (ver manual_setup.md)
-- [ ] **MANUAL**: Configurar data source S3 en consola
-- [ ] **MANUAL**: Esperar sincronización completa
-- [ ] Anotar Knowledge Base ID para el siguiente paso
+- [x] **MANUAL**: Crear Knowledge Base en consola AWS (ver manual_setup.md)
+- [x] **MANUAL**: Configurar data source S3 en consola
+- [x] **MANUAL**: Esperar sincronización completa
+- [x] Anotar Knowledge Base ID para el siguiente paso
 
 ### 3. Agente Bedrock (`bedrock-agent/`)
-- [ ] Crear agente en Amazon Bedrock
-- [ ] Configurar modelo Claude 3 Haiku
-- [ ] Asociar base de conocimiento al agente
-- [ ] Definir instrucciones del agente para DNOC
-- [ ] Crear alias del agente
-- [ ] Probar agente con consultas de prueba
+- [x] Crear agente en Amazon Bedrock
+- [x] Configurar modelo Claude 4 Sonnet
+- [x] Asociar base de conocimiento al agente
+- [x] Definir instrucciones del agente para DNOC
+- [x] Crear alias del agente
+- [x] Probar agente con consultas de prueba
 
 ### 4. Backend Lambda (`backend/`)
-- [ ] Crear función Lambda con Python 3.12
-- [ ] Implementar integración con Bedrock Agent usando boto3
-- [ ] Configurar variables de entorno
-- [ ] Implementar manejo de errores
-- [ ] Agregar logging con CloudWatch
+- [x] Crear función Lambda con Python 3.12
+- [x] Implementar integración con Bedrock Agent usando boto3
+- [x] Configurar variables de entorno
+- [_] Implementar manejo de errores
+- [x] Agregar logging con CloudWatch
 
 ### 5. Frontend Gradio (`frontend/`)
-- [ ] Crear interfaz de chat con Gradio
-- [ ] Implementar conexión con Lambda via API Gateway
-- [ ] Agregar indicadores de carga
-- [ ] Implementar historial de conversación
-- [ ] Configurar para ejecutar en Windows
+- [x] Crear interfaz de chat con Gradio
+- [x] Implementar conexión con Lambda via API Gateway
+- [x] Agregar indicadores de carga
+- [x] Implementar historial de conversación [Memoria en navegador]
+- [x] Configurar para ejecutar en Windows
 
 ### 6. Infraestructura (`infrastructure/`)
-- [ ] Crear template CloudFormation
-- [ ] Configurar API Gateway
-- [ ] Definir políticas IAM
-- [ ] Configurar variables de entorno
-- [ ] Script de despliegue
+- [x] Crear template CloudFormation
+- [x] Configurar API Gateway
+- [x] Definir políticas IAM
+- [_] Configurar variables de entorno
+- [x] Script de despliegue
 
 ### 7. Testing y Documentación
-- [ ] Probar flujo completo
-- [ ] Documentar APIs
-- [ ] Crear guía de despliegue
-- [ ] Validar con casos de uso DNOC
+- [x] Probar flujo completo
+- [_] Documentar APIs
+- [_] Crear guía de despliegue
+- [x] Validar con casos de uso DNOC
 
 ## 🎯 Orden de Ejecución Recomendado
 
@@ -85,3 +85,6 @@ Hackaton-DNoc/
 - **Testing**: 30 min
 
 **Total estimado**: ~5.5 horas
+
+##  NOTAS!
+- El Deployment de Gradio no se realizo en AWS, se uso local.
