@@ -360,6 +360,18 @@ def create_interface():
             background: var(--telecom-dark-blue);
         }
         
+        /* Alert button */
+        .alert-btn {
+            background: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: white !important;
+        }
+        
+        .alert-btn:hover {
+            background: #c82333 !important;
+            border-color: #bd2130 !important;
+        }
+        
         /* Responsive design */
         @media (max-width: 768px) {
             .gradio-container {
@@ -417,11 +429,12 @@ def create_interface():
             
             # Sidebar with examples
             with gr.Column(scale=1, elem_classes=["sidebar"]):
+                alert = gr.Button("ALERT!", variant="stop", size="lg", elem_classes=["alert-btn"])
+                
                 gr.Markdown("### 💡 Consultas Frecuentes")
                 
                 examples = [
                     "Que es un servicio de WAG?",
-                    "Hay algun problema en el WAG?"
                 ]
                 
                 for example in examples:
@@ -430,7 +443,7 @@ def create_interface():
                         lambda x=example: x,
                         outputs=[msg]
                     )
-        
+                
         # Status indicator
         with gr.Row():
             status = gr.Markdown("🟢 **Estado del Sistema**: Operativo", elem_classes=["status-indicator"])
@@ -463,6 +476,19 @@ def create_interface():
             lambda: (dnoc_bot.clear_chat(), "🟢 **Estado del Sistema**: Conversación reiniciada"),
             outputs=[chatbot, status],
             queue=False
+        )
+        
+        alert.click(
+            submit_message,
+            inputs=[gr.State("""
+            node	summary	first_ocurrence
+plwagapp2	! - [Windows]: EventLog(6008 - None): The previous system shutdown at 12:22:00 on 8/8/2025 was unexpected. [MonitoreoBase EventLog 6008]	21/8/2025 16:02
+plwagapp1	! - [Windows]: EventLog(6008 - None): The previous system shutdown at 12:21:00 on 8/87/2025 was unexpected. [MonitoreoBase EventLog 6008]	21/8/2025 16:00
+plwagmirr1	! - [Windows]: EventLog(6008 - None): The previous system shutdown at 12:23:00 on 8/8/2025 was unexpected. [MonitoreoBase EventLog 6008]	21/8/2025 15:59
+pesx4559.oneteco.arg.telecom.com.ar	The status on pesx4559.oneteco.arg.telecom.com.ar.Status is not as expected (3 (red))	21/8/2025 15:54
+pesx4608.oneteco.arg.telecom.com.ar	System.Memory:Memory Usage pct has breached threshold for 5 out of 6 times for pesx4608.oneteco.arg.telecom.com.ar	21/8/2025 15:57
+            """), chatbot],
+            outputs=[chatbot, msg, status]
         )
         
         # Footer
