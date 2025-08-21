@@ -25,7 +25,20 @@ def deploy_infrastructure(agent_id, agent_alias_id):
     
     stack_name = 'dnoc-chatbot-stack'
     
-    with open('cloudformation.yaml', 'r') as f:
+    # Verificar si el stack ya existe
+    try:
+        cf.describe_stacks(StackName=stack_name)
+        print(f"Stack {stack_name} ya existe, eliminando...")
+        cf.delete_stack(StackName=stack_name)
+        
+        # Esperar a que se elimine
+        waiter = cf.get_waiter('stack_delete_complete')
+        waiter.wait(StackName=stack_name)
+        print("Stack anterior eliminado")
+    except:
+        pass  # Stack no existe
+    
+    with open('simple_cloudformation.yaml', 'r') as f:
         template_body = f.read()
     
     parameters = [
@@ -50,10 +63,21 @@ def deploy_infrastructure(agent_id, agent_alias_id):
         
         print(f"Stack creado: {stack_name}")
         
-        # Esperar a que se complete
+        # Esperar a que se complete con timeout
         waiter = cf.get_waiter('stack_create_complete')
         print("Esperando que se complete el despliegue...")
-        waiter.wait(StackName=stack_name)
+        
+        try:
+            waiter.wait(StackName=stack_name, WaiterConfig={'MaxAttempts': 30})
+        except Exception as wait_error:
+            # Si falla, obtener eventos del stack para debug
+            print(f"Error en despliegue: {wait_error}")
+            print("Eventos del stack:")
+            events = cf.describe_stack_events(StackName=stack_name)
+            for event in events['StackEvents'][:5]:  # Mostrar últimos 5 eventos
+                if 'ResourceStatusReason' in event:
+                    print(f"- {event['LogicalResourceId']}: {event['ResourceStatusReason']}")
+            return None
         
         # Obtener outputs
         stack_info = cf.describe_stacks(StackName=stack_name)

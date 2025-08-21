@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Infraestructura simplificada para Chatbot DNOC'
+
+Parameters:
+  AgentId:
+    Type: String
+    Description: ID del agente de Bedrock
+  AgentAliasId:
+    Type: String
+    Description: ID del alias del agente de Bedrock
+
+Resources:
+  # Función Lambda
+  ChatbotLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: dnoc-chatbot-handler
+      Runtime: python3.12
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          def lambda_handler(event, context):
+              return {
+                  'statusCode': 200,
+                  'headers': {'Access-Control-Allow-Origin': '*'},
+                  'body': json.dumps({'message': 'Lambda funcionando'})
+              }
+      Environment:
+        Variables:
+          AGENT_ID: !Ref AgentId
+          AGENT_ALIAS_ID: !Ref AgentAliasId
+      Timeout: 30
+
+  # Rol IAM para Lambda
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: BedrockAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: bedrock:InvokeAgent
+                Resource: '*'
+
+  # API Gateway
+  ChatbotAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: dnoc-chatbot-api
+      EndpointConfiguration:
+        Types: [REGIONAL]
+
+  # Recurso /chat
+  ChatResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ChatbotAPI
+      ParentId: !GetAtt ChatbotAPI.RootResourceId
+      PathPart: chat
+
+  # Método POST
+  ChatMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ChatbotAPI
+      ResourceId: !Ref ChatResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ChatbotLambda.Arn}/invocations'
+
+  # Despliegue
+  APIDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: ChatMethod
+    Properties:
+      RestApiId: !Ref ChatbotAPI
+      StageName: prod
+
+  # Permiso Lambda
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ChatbotLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ChatbotAPI}/*/POST/chat'
+
+Outputs:
+  APIEndpoint:
+    Value: !Sub 'https://${ChatbotAPI}.execute-api.${AWS::Region}.amazonaws.com/prod/chat'
+  LambdaFunction:
+    Value: !Ref ChatbotLambda

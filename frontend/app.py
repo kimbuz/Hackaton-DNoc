@@ -5,7 +5,9 @@ import os
 from datetime import datetime
 
 # Configuración
-API_ENDPOINT = os.getenv('API_ENDPOINT', 'https://your-api-gateway-url.amazonaws.com/prod/chat')
+# API_ENDPOINT = os.getenv('API_ENDPOINT', 'https://nk3mn7a324.execute-api.us-west-2.amazonaws.com/prod/chat')
+API_ENDPOINT='https://nk3mn7a324.execute-api.us-west-2.amazonaws.com/prod/chat'
+print(f"Usando API Endpoint: {API_ENDPOINT}")
 
 def chat_with_agent(message, history):
     """Envía mensaje al agente de Bedrock y retorna respuesta"""
@@ -26,12 +28,16 @@ def chat_with_agent(message, history):
         
         if response.status_code == 200:
             result = response.json()
-            return result.get('response', 'Error: Respuesta vacía')
+            bot_response = result.get('response', 'Error: Respuesta vacía')
         else:
-            return f"Error: {response.status_code} - {response.text}"
+            bot_response = f"Error: {response.status_code} - {response.text}"
             
     except Exception as e:
-        return f"Error de conexión: {str(e)}"
+        bot_response = f"Error de conexión: {str(e)}\n\n⚠️ Verifica que API_ENDPOINT esté configurado correctamente"
+    
+    # Agregar mensaje a historial en formato correcto
+    history.append([message, bot_response])
+    return history, ""
 
 def clear_chat():
     """Limpia el historial de chat"""
@@ -68,13 +74,9 @@ with gr.Blocks(title="DNOC Assistant", theme=gr.themes.Soft()) as demo:
     )
     
     # Eventos
-    submit_btn.click(chat_with_agent, [msg, chatbot], [chatbot])
-    msg.submit(chat_with_agent, [msg, chatbot], [chatbot])
+    submit_btn.click(chat_with_agent, [msg, chatbot], [chatbot, msg])
+    msg.submit(chat_with_agent, [msg, chatbot], [chatbot, msg])
     clear_btn.click(clear_chat, outputs=[chatbot])
-    
-    # Limpiar input después de enviar
-    submit_btn.click(lambda: "", outputs=[msg])
-    msg.submit(lambda: "", outputs=[msg])
 
 if __name__ == "__main__":
     demo.launch(

@@ -88,8 +88,6 @@ Resources:
         Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ChatbotLambda.Arn}/invocations'
       MethodResponses:
         - StatusCode: 200
-          ResponseHeaders:
-            Access-Control-Allow-Origin: true
 
   # Método OPTIONS para CORS
   ChatOptionsMethod:
@@ -103,20 +101,12 @@ Resources:
         Type: MOCK
         IntegrationResponses:
           - StatusCode: 200
-            ResponseHeaders:
-              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-              Access-Control-Allow-Methods: "'POST,OPTIONS'"
-              Access-Control-Allow-Origin: "'*'"
             ResponseTemplates:
               application/json: ''
         RequestTemplates:
           application/json: '{"statusCode": 200}'
       MethodResponses:
         - StatusCode: 200
-          ResponseHeaders:
-            Access-Control-Allow-Headers: true
-            Access-Control-Allow-Methods: true
-            Access-Control-Allow-Origin: true
 
   # Despliegue de API
   APIDeployment:
