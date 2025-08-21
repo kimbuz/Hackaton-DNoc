@@ -6,7 +6,7 @@ from datetime import datetime
 
 # Configuración
 # API_ENDPOINT = os.getenv('API_ENDPOINT', 'https://nk3mn7a324.execute-api.us-west-2.amazonaws.com/prod/chat')
-API_ENDPOINT='https://nk3mn7a324.execute-api.us-west-2.amazonaws.com/prod/chat'
+API_ENDPOINT='https://bq3hfoj5bb.execute-api.us-west-2.amazonaws.com/prod/chat'
 print(f"Usando API Endpoint: {API_ENDPOINT}")
 
 def chat_with_agent(message, history):

@@ -25,7 +25,7 @@ def create_or_get_agent():
                         agentId=agent_id,
                         agentName='dnoc-technical-assistant',
                         description='Asistente técnico especializado en resolución de incidentes DNOC',
-                        foundationModel='anthropic.claude-3-haiku-20240307-v1:0',
+                        foundationModel='amazon.nova-micro-v1:0',
                         agentResourceRoleArn=role_arn,
                         instruction="""
 Eres un asistente técnico especializado en DNOC (Data Network Operations Center).
@@ -81,7 +81,7 @@ Características:
     agent_config = {
         'agentName': 'dnoc-technical-assistant',
         'description': 'Asistente técnico especializado en resolución de incidentes DNOC',
-        'foundationModel': 'anthropic.claude-3-haiku-20240307-v1:0',
+        'foundationModel': 'us.amazon.nova-micro-v1:0',
         'agentResourceRoleArn': f'arn:aws:iam::{account_id}:role/service-role/AmazonBedrockExecutionRoleForKnowledgeBase_kb',
         'instruction': """
 Eres un asistente técnico especializado en DNOC (Data Network Operations Center).
@@ -151,9 +151,21 @@ def associate_knowledge_base(agent_id, knowledge_base_id):
         print(f"Advertencia: No se pudo asociar KB (usando modo mock): {e}")
         return False
 
-def create_agent_alias(agent_id):
-    """Crea un alias para el agente"""
+def create_or_get_agent_alias(agent_id):
+    """Crea un alias para el agente o usa el existente"""
     
+    # Primero intentar listar aliases existentes
+    try:
+        response = bedrock_agent.list_agent_aliases(agentId=agent_id)
+        for alias in response.get('agentAliasSummaries', []):
+            if alias['agentAliasName'] == 'production':
+                alias_id = alias['agentAliasId']
+                print(f"Usando alias existente: {alias_id}")
+                return alias_id
+    except Exception as e:
+        print(f"Error listando aliases: {e}")
+    
+    # Si no existe, crear uno nuevo
     try:
         response = bedrock_agent.create_agent_alias(
             agentId=agent_id,
@@ -191,7 +203,7 @@ if __name__ == "__main__":
             print("Esperando preparación del agente...")
             time.sleep(15)
             
-            alias_id = create_agent_alias(agent_id)
+            alias_id = create_or_get_agent_alias(agent_id)
             if alias_id:
                 print(f"\n✅ Configuraciones para Lambda:")
                 print(f"AGENT_ID={agent_id}")

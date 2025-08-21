@@ -1,23 +1,25 @@
 import json
-import boto3
 import os
 import logging
-from botocore.exceptions import ClientError
+import sys
+
+# Agregar directorio bedrock-agent al path
+sys.path.append('/opt/python')
+sys.path.append(os.path.join(os.path.dirname(__file__), 'bedrock-agent'))
 
 # Configurar logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Log de inicio
-logger.info("Lambda function iniciada")
-logger.info(f"Variables de entorno: AGENT_ID={os.environ.get('AGENT_ID')}, AGENT_ALIAS_ID={os.environ.get('AGENT_ALIAS_ID')}")
+logger.info("Lambda function iniciada con Strands Agent")
 
-# Cliente Bedrock
-bedrock_agent = boto3.client('bedrock-agent-runtime')
-
-# Variables de entorno
-AGENT_ID = os.environ['AGENT_ID']
-AGENT_ALIAS_ID = os.environ['AGENT_ALIAS_ID']
+try:
+    from claude_agent import process_message
+    logger.info("Claude agent importado exitosamente")
+except ImportError as e:
+    logger.error(f"Error importando claude_agent: {e}")
+    process_message = None
 
 def lambda_handler(event, context):
     """Handler principal de Lambda"""
@@ -52,9 +54,12 @@ def lambda_handler(event, context):
                 })
             }
         
-        # Invocar agente de Bedrock
-        logger.info("Invocando agente de Bedrock")
-        response = invoke_bedrock_agent(message, session_id)
+        # Invocar agente Claude
+        logger.info("Invocando agente Claude")
+        if process_message is None:
+            raise Exception("Claude agent no disponible")
+        
+        response = process_message(message, session_id)
         logger.info(f"Respuesta del agente: {response[:100]}...")  # Primeros 100 chars
         
         return {
@@ -85,38 +90,4 @@ def lambda_handler(event, context):
             })
         }
 
-def invoke_bedrock_agent(message, session_id):
-    """Invoca el agente de Bedrock y retorna la respuesta"""
-    
-    logger.info(f"Invocando agente - ID: {AGENT_ID}, Alias: {AGENT_ALIAS_ID}")
-    
-    try:
-        response = bedrock_agent.invoke_agent(
-            agentId=AGENT_ID,
-            agentAliasId=AGENT_ALIAS_ID,
-            sessionId=session_id,
-            inputText=message
-        )
-        logger.info("Respuesta de Bedrock recibida exitosamente")
-        
-        # Procesar respuesta streaming
-        result = ""
-        for event in response['completion']:
-            if 'chunk' in event:
-                chunk = event['chunk']
-                if 'bytes' in chunk:
-                    result += chunk['bytes'].decode('utf-8')
-        
-        return result.strip()
-        
-    except ClientError as e:
-        logger.error(f"Error de Bedrock ClientError: {e}")
-        logger.error(f"Error code: {e.response.get('Error', {}).get('Code', 'Unknown')}")
-        logger.error(f"Error message: {e.response.get('Error', {}).get('Message', 'Unknown')}")
-        raise Exception(f"Error al comunicarse con Bedrock: {e}")
-    except Exception as e:
-        logger.error(f"Error inesperado en invoke_bedrock_agent: {e}")
-        logger.error(f"Tipo de error: {type(e).__name__}")
-        import traceback
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        raise Exception(f"Error inesperado: {e}")
+# Función invoke_bedrock_agent removida - ahora usa Strands
